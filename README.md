@@ -23,6 +23,9 @@ App local (FastAPI + React + MongoDB) pensada para ejecutarse en un PC de la cl�
 - **Gemini** (por defecto) con la clave gratuita del propio usuario (`GEMINI_API_KEY`), mediante el SDK oficial `google-genai`.
   Modelo `GEMINI_MODEL=gemini-3-flash-preview` y modelos de respaldo `GEMINI_FALLBACK_MODELS=gemini-3.1-flash-lite`.
   Ante 429 o 503 reintenta con espera progresiva y pasa al modelo de respaldo. Si se alcanza el límite gratuito muestra: "Ori está descansando un momento…".
+- **Claude** (Anthropic) con clave de API propia (`ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, por defecto `claude-sonnet-5-5`). Se paga por uso en console.anthropic.com, aparte de la suscripción de Claude.
+- **Otras IAs** vía cualquier API compatible con OpenAI, por defecto OpenRouter (`OPENAI_BASE_URL`, `OPENAI_API_KEY`, `OPENAI_MODEL`).
+- Ninguna clave de API se incluye en las copias de seguridad.
 - **Ollama** (opcional, local): `OLLAMA_BASE_URL`, `OLLAMA_CHAT_MODEL`, `OLLAMA_VISION_MODEL` (este último hace falta para el OCR).
 - No se usa la Emergent universal key en tiempo de ejecución.
 

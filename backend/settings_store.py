@@ -10,11 +10,27 @@ ENV_KEYS = {
     "ollama_base_url": "OLLAMA_BASE_URL",
     "ollama_chat_model": "OLLAMA_CHAT_MODEL",
     "ollama_vision_model": "OLLAMA_VISION_MODEL",
+    "anthropic_api_key": "ANTHROPIC_API_KEY",
+    "anthropic_model": "ANTHROPIC_MODEL",
+    "openai_base_url": "OPENAI_BASE_URL",
+    "openai_api_key": "OPENAI_API_KEY",
+    "openai_model": "OPENAI_MODEL",
 }
+
+# Valores por defecto para las claves que no existían en instalaciones antiguas (.env sin ellas).
+DEFAULTS = {
+    "anthropic_api_key": "",
+    "anthropic_model": "claude-sonnet-5-5",
+    "openai_base_url": "https://openrouter.ai/api/v1",
+    "openai_api_key": "",
+    "openai_model": "",
+}
+
+SECRET_KEYS = ("gemini_api_key", "anthropic_api_key", "openai_api_key")
 
 
 async def get_llm_settings() -> dict:
-    settings = {k: os.environ[v] for k, v in ENV_KEYS.items()}
+    settings = {k: os.environ.get(v, DEFAULTS.get(k, "")) for k, v in ENV_KEYS.items()}
     saved = await db.settings.find_one({"_id": "llm"}) or {}
     settings.update({k: v for k, v in saved.items() if k in ENV_KEYS and v not in (None, "")})
     return settings
@@ -26,8 +42,9 @@ async def save_llm_settings(changes: dict):
 
 
 def public_settings(s: dict) -> dict:
-    out = {k: v for k, v in s.items() if k != "gemini_api_key"}
-    key = s.get("gemini_api_key") or ""
-    out["gemini_api_key_set"] = bool(key)
-    out["gemini_api_key_hint"] = f"…{key[-4:]}" if key else ""
+    out = {k: v for k, v in s.items() if k not in SECRET_KEYS}
+    for name in SECRET_KEYS:
+        key = s.get(name) or ""
+        out[f"{name}_set"] = bool(key)
+        out[f"{name}_hint"] = f"…{key[-4:]}" if key else ""
     return out

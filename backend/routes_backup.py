@@ -15,6 +15,7 @@ from deps import db
 from models import now_iso
 from retrieval import sync_index
 from routes_documents import STORAGE
+from settings_store import SECRET_KEYS
 
 router = APIRouter()
 COLLECTIONS = ["profiles", "folders", "documents", "chunks", "conversations", "messages",
@@ -24,7 +25,8 @@ VERSION = 1
 
 def _strip_secret(name: str, doc: dict) -> dict:
     if name == "settings" and doc.get("_id") == "llm":
-        doc.pop("gemini_api_key", None)
+        for k in SECRET_KEYS:
+            doc.pop(k, None)
     return doc
 
 
@@ -95,7 +97,8 @@ async def import_backup(file: UploadFile = File(...), mode: str = Form("merge"))
             manifest, data, files = await asyncio.to_thread(_read, tmp)
         except zipfile.BadZipFile as e:
             raise HTTPException(400, "El archivo no es un .zip válido") from e
-        key = (await db.settings.find_one({"_id": "llm"}) or {}).get("gemini_api_key")
+        llm_doc = await db.settings.find_one({"_id": "llm"}) or {}
+        keys = {k: llm_doc[k] for k in SECRET_KEYS if llm_doc.get(k)}
         for name, docs in data.items():
             col = db[name]
             if mode == "replace":
@@ -108,8 +111,8 @@ async def import_backup(file: UploadFile = File(...), mode: str = Form("merge"))
                     await col.insert_many(batch)
                 else:
                     await col.bulk_write([ReplaceOne({"_id": d["_id"]}, d, upsert=True) for d in batch])
-        if key:
-            await db.settings.update_one({"_id": "llm"}, {"$set": {"gemini_api_key": key}}, upsert=True)
+        if keys:
+            await db.settings.update_one({"_id": "llm"}, {"$set": keys}, upsert=True)
         await asyncio.to_thread(_extract, tmp, files, mode == "replace")
         await sync_index(force=True)
         return {"mode": mode, "restored": {n: len(d) for n, d in data.items()}, "files": len(files),

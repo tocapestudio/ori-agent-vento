@@ -244,10 +244,15 @@ class AccessCodeChange(BaseModel):
 
 
 class LLMSettingsIn(BaseModel):
-    llm_backend: Optional[Literal["gemini", "ollama"]] = None
+    llm_backend: Optional[Literal["gemini", "ollama", "claude", "openai"]] = None
     gemini_api_key: Optional[str] = None
     gemini_model: Optional[str] = None
     gemini_fallback_models: Optional[str] = None
     ollama_base_url: Optional[str] = None
     ollama_chat_model: Optional[str] = None
     ollama_vision_model: Optional[str] = None
+    anthropic_api_key: Optional[str] = None
+    anthropic_model: Optional[str] = None
+    openai_base_url: Optional[str] = None
+    openai_api_key: Optional[str] = None
+    openai_model: Optional[str] = None

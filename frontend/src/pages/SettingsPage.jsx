@@ -22,40 +22,56 @@ const Card = ({ icon: Icon, title, children, testId }) => (
   </section>
 );
 
+const CLAUDE_MODELS = ["claude-sonnet-5-5", "claude-haiku-5-5", "claude-opus-5-5"];
+const BACKENDS = [
+  ["claude", "Claude (Anthropic)"],
+  ["gemini", "Google Gemini"],
+  ["openai", "Otras IAs (OpenRouter…)"],
+  ["ollama", "Ollama (local)"],
+];
+const SECRET = { gemini: "gemini_api_key", claude: "anthropic_api_key", openai: "openai_api_key" };
+
+const KeyField = ({ s, name, label, value, onChange, testId }) => (
+  <Field label={label} hint={s[`${name}_set`] ? `Clave guardada (${s[`${name}_hint`]}). Deja vacío para mantenerla.` : "Sin clave configurada."}>
+    <input data-testid={testId} type="password" autoComplete="off" value={value} onChange={onChange} placeholder="Pega una nueva clave" className={field} />
+  </Field>
+);
+
 const LLMCard = () => {
   const [s, setS] = useState(null);
-  const [key, setKey] = useState("");
+  const [keys, setKeys] = useState({});
   const [saving, setSaving] = useState(false);
   const [test, setTest] = useState(null);
   useEffect(() => { api.get("/settings").then((r) => setS(r.data)); }, []);
   if (!s) return <Loader2 className="animate-spin text-slate-400" />;
   const set = (k) => (e) => setS({ ...s, [k]: e.target.value });
+  const setKey = (k) => (e) => setKeys({ ...keys, [k]: e.target.value });
 
   const save = async () => {
     setSaving(true);
     try {
       const body = { llm_backend: s.llm_backend, gemini_model: s.gemini_model, gemini_fallback_models: s.gemini_fallback_models,
-        ollama_base_url: s.ollama_base_url, ollama_chat_model: s.ollama_chat_model, ollama_vision_model: s.ollama_vision_model };
-      if (key.trim()) body.gemini_api_key = key.trim();
+        ollama_base_url: s.ollama_base_url, ollama_chat_model: s.ollama_chat_model, ollama_vision_model: s.ollama_vision_model,
+        anthropic_model: s.anthropic_model, openai_base_url: s.openai_base_url, openai_model: s.openai_model };
+      Object.values(SECRET).forEach((k) => { if (keys[k]?.trim()) body[k] = keys[k].trim(); });
       const { data } = await api.put("/settings", body);
-      setS(data); setKey(""); toast.success("Ajustes guardados");
+      setS(data); setKeys({}); toast.success("Ajustes guardados");
     } catch (e) { toast.error(errMsg(e)); } finally { setSaving(false); }
   };
   const runTest = async () => { setTest({ loading: true }); const { data } = await api.post("/settings/test-llm"); setTest(data); };
+  const b = s.llm_backend;
 
   return (
     <Card icon={Cpu} title="Proveedor de IA" testId="settings-llm-card">
-      <div className="flex rounded-full bg-slate-100 p-1 w-fit" data-testid="settings-backend-selector">
-        {[["gemini", "Google Gemini (clave propia)"], ["ollama", "Ollama (local)"]].map(([id, label]) => (
-          <button key={id} data-testid={`settings-backend-${id}`} onClick={() => setS({ ...s, llm_backend: id })}
-            className={`rounded-full px-4 py-1.5 text-sm transition-colors ${s.llm_backend === id ? "bg-[#1B2A3A] text-white" : "text-slate-600"}`}>{label}</button>
+      <div className="flex flex-wrap gap-1 rounded-2xl bg-slate-100 p-1 w-fit" data-testid="settings-backend-selector">
+        {BACKENDS.map(([id, label]) => (
+          <button key={id} data-testid={`settings-backend-${id}`} onClick={() => { setS({ ...s, llm_backend: id }); setTest(null); }}
+            className={`rounded-full px-4 py-1.5 text-sm transition-colors ${b === id ? "bg-[#1B2A3A] text-white" : "text-slate-600"}`}>{label}</button>
         ))}
       </div>
-      {s.llm_backend === "gemini" ? (
+      {b === "gemini" && (
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Clave API de Gemini" hint={s.gemini_api_key_set ? `Clave guardada (${s.gemini_api_key_hint}). Deja vacío para mantenerla.` : "Sin clave configurada."}>
-            <input data-testid="settings-gemini-key" type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Pega una nueva clave" className={field} />
-          </Field>
+          <KeyField s={s} name="gemini_api_key" label="Clave API de Gemini" value={keys.gemini_api_key || ""} onChange={setKey("gemini_api_key")} testId="settings-gemini-key" />
           <Field label="Modelo principal">
             <input data-testid="settings-gemini-model" list="gemini-models" value={s.gemini_model} onChange={set("gemini_model")} className={field} />
             <datalist id="gemini-models">{GEMINI_MODELS.map((m) => <option key={m} value={m} />)}</datalist>
@@ -64,7 +80,32 @@ const LLMCard = () => {
             <input data-testid="settings-gemini-fallbacks" value={s.gemini_fallback_models} onChange={set("gemini_fallback_models")} className={field} />
           </Field>
         </div>
-      ) : (
+      )}
+      {b === "claude" && (
+        <div className="space-y-3">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <KeyField s={s} name="anthropic_api_key" label="Clave API de Claude" value={keys.anthropic_api_key || ""} onChange={setKey("anthropic_api_key")} testId="settings-claude-key" />
+            <Field label="Modelo" hint="Sonnet: equilibrio calidad/precio. Haiku: más rápido y barato. Opus: máxima calidad.">
+              <input data-testid="settings-claude-model" list="claude-models" value={s.anthropic_model} onChange={set("anthropic_model")} className={field} />
+              <datalist id="claude-models">{CLAUDE_MODELS.map((m) => <option key={m} value={m} />)}</datalist>
+            </Field>
+          </div>
+          <p className="text-xs text-slate-500">La clave se crea en <a className="underline" href="https://console.anthropic.com" target="_blank" rel="noreferrer">console.anthropic.com</a> (API Keys). Se paga por uso, aparte de la suscripción de Claude: pon un límite de gasto en la consola.</p>
+        </div>
+      )}
+      {b === "openai" && (
+        <div className="space-y-3">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="URL del proveedor"><input data-testid="settings-openai-url" value={s.openai_base_url} onChange={set("openai_base_url")} className={field} /></Field>
+            <KeyField s={s} name="openai_api_key" label="Clave API" value={keys.openai_api_key || ""} onChange={setKey("openai_api_key")} testId="settings-openai-key" />
+            <Field label="Modelo" hint="Ej.: openai/gpt-5, mistralai/mistral-large…">
+              <input data-testid="settings-openai-model" value={s.openai_model} onChange={set("openai_model")} className={field} />
+            </Field>
+          </div>
+          <p className="text-xs text-slate-500">Con <a className="underline" href="https://openrouter.ai" target="_blank" rel="noreferrer">OpenRouter</a> una sola clave da acceso a muchas IAs. También sirve cualquier servicio compatible con OpenAI (cambiando la URL).</p>
+        </div>
+      )}
+      {b === "ollama" && (
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="URL base de Ollama"><input data-testid="settings-ollama-url" value={s.ollama_base_url} onChange={set("ollama_base_url")} className={field} /></Field>
           <Field label="Modelo de chat"><input data-testid="settings-ollama-chat-model" value={s.ollama_chat_model} onChange={set("ollama_chat_model")} className={field} /></Field>
@@ -81,6 +122,7 @@ const LLMCard = () => {
           </span>
         )}
       </div>
+      <p className="text-xs text-slate-400">Guarda antes de probar la conexión. El proveedor elegido se usa para el chat, las chuletas y el OCR de documentos escaneados.</p>
     </Card>
   );
 };
