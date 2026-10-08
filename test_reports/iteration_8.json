@@ -1,0 +1,28 @@
+{
+  "summary": "Phase 8 (Ori chat UI batch) verified end-to-end. Backend pytest 5/5 pass in /app/backend/tests/test_chat_disclaimer.py: (a) GET /api/conversations/6ac6c2208965f11733f2cc2a returns messages whose assistant records expose a top-level `disclaimer` field and whose `content` no longer ends with the 'herramienta de apoyo…' sentence; (b) assistant messages with inline [file.pdf, p. N] brackets have populated `doc_sources` entries carrying doc_id/file_name/ref; (c) GET /api/documents/<id>/file?token=... serves inline application/pdf WITHOUT attachment disposition; (d) same endpoint with &download=true adds Content-Disposition: attachment; (e) POST /api/chat (non-stream) with a trivial 1-call question returns both `answer` and separate `disclaimer` fields and `answer` does not re-contain the disclaimer tail (single live LLM call, cleaned up). Frontend playwright run against the Paula conversation 6ac6c2208965f11733f2cc2a: 7 inline-cite-<idx>-<i> chips rendered; 0 raw [file.<ext>, ...] strings left in the rendered answer; 1 msg-disclaimer-0 footer with computed style fontSize=12px color=rgb(138,148,163) [#8A94A3] fontStyle=italic marginTop=12px. Clicking the first chip opened doc-side-panel with doc-side-title='goalkeepercuesanddrill.pdf', doc-side-ref='Referencia citada: p. 2', doc-side-iframe src ending with '#page=2', doc-side-open-tab href=/api/documents/<id>/file?token=...#page=2 and doc-side-download href=/api/documents/<id>/file?token=...&download=true. Pressing doc-side-close removed the panel and the 2 chat messages remained intact. Sidebar: conversation-menu-6ac6c2208965f11733f2cc2a (active) has opacity=1 and 32x32 target; the two inactive menus have opacity=0 (shown on hover via group-hover). Dropdown items conversation-rename-<id> and conversation-delete-<id> both measure 160x40 (≈38px tall as spec'd). Clicking Eliminar opened the conversation-delete-confirm dialog; cancelled with -cancel. Quick-actions-toggle in the existing conv started with aria-expanded=false (no expand flash); in a new /chat empty route it started aria-expanded=true and auto-collapsed to false within ~4 s.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_chat_disclaimer.py",
+    "/app/test_reports/pytest/chat_disclaimer.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "DocSidePanel IMAGES whitelist is ['png','jpg'] — misses 'jpeg','webp','gif'. If a user uploads image.jpeg or image.webp (ingest likely accepts them), the panel falls through to the TextPreview branch instead of rendering the image. Low risk now but worth normalizing with the ingest type list.",
+    "MessageBubble.linkify builds a new refs list that may push synthetic entries without doc_id when a reference string isn't in sources (e.g., 'file.pdf, sección 3' with no matching source). Downstream DocSidePanel calls /api/documents/<doc_id> and will 404/throw if doc_id is undefined. Should guard the push with base?.doc_id or skip when base is undefined.",
+    "backend/routes_chat.split_disclaimer regex anchors with `$` after rstrip; if the LLM emits the sentence followed by trailing markdown (e.g., bullet continuation), the split can miss. The frontend has an identical fallback splitter, so old data is handled client-side as spec'd — but any new assistant content stored without the trailing disclaimer being stripped would still render the sentence inside the body AND as a footer (double-render). Consider making the regex multi-line tolerant or adding a server-side de-dupe step.",
+    "DocSidePanel re-fetches /api/documents/<id> on every target change but doesn't cancel the previous in-flight promise; rapid chip clicks could cause an out-of-order setData. AbortController would make this robust."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_chat_disclaimer.py",
+    "/app/test_reports/iteration_8.json",
+    "/app/test_reports/pytest/chat_disclaimer.xml"
+  ],
+  "success_rate": {"backend": "100% (5/5)", "frontend": "100% of exercised flows"},
+  "test_credentials": "Team access code Orion9944+; profile Paula id 6ac681af4c6b10bd64f5d546; existing conversation 6ac6c2208965f11733f2cc2a (not modified)",
+  "seed_data_creation": "One ephemeral conversation created by TestSplitDisclaimerUnit via POST /api/chat and immediately deleted via DELETE /api/conversations/<id>?profile_id=<Paula>. No other data created or deleted.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Phase-8 chat UI batch is green. The non-PDF side-panel branches (doc-preview-text with data-focus=true, doc-side-image, doc-side-missing+doc-side-snippet) were NOT exercised live because Paula's active conversation only cites PDF documents and the Gemini free tier is rate-limited — the structural code (TextPreview focusRef highlighting + Missing component) exists in /app/frontend/src/components/docs/DocSidePanel.jsx. To exercise them: upload a docx/png under Paula's Mi biblioteca, ask Ori a question that cites it, then click the inline chip. For the 'missing original' path, PATCH or DELETE a user-uploaded doc that an older message cites. Headless Chromium cannot render PDF contents inside iframes — we only validate iframe src attribute + /api/documents/<id>/file inline Content-Type (as the request itself noted). Backend POST /api/chat requires ChatRequest fields {question, profile_id, scope, web_search, [conversation_id], [template_id]}; the response schema now includes `disclaimer` alongside `answer`.",
+  "rca of the issue": "No issues found."
+}

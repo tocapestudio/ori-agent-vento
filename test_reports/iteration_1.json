@@ -1,0 +1,22 @@
+{
+  "summary": "Full backend+frontend test of Ori Fase 0 POC (Spanish optometry RAG). Created /app/backend/tests/test_ori_api.py with 21 pytest cases - all PASSED. Verified: /api/openapi.json; 6 pre-seeded common fixtures reached status=ready with chunk_count>0 and correct ocr_used flag; scanned PDF OCR text contains '11 cm'; PNG OCR text contains '40 segundos'; caso_omega_perfilA.docx present with scope=profile:perfilA; /api/search scope filter correctly excludes Omega from common and includes it in mine; chat answers Orion-Alfa question grounded in guia_ambliopia.pdf p.2 with 3h/14sem; not-found question returns 'No lo encuentro en tus documentos' with empty web_sources when web_search=false; same question with web_search=true returns non-empty web_sources and 'Fuente web' section; multi-turn via session_id persists history (4 messages); PATCH notes become retrievable via /search (note chunk returned); upload/process/delete lifecycle works end-to-end; unsupported types + profile without profile_id return 400; invalid ObjectId returns 404. UI: App loads, all required data-testids present (upload-file-input, upload-scope-select, chat-input, chat-send-button, chat-scope-select, web-search-toggle, profile-id-input, doc-status-{id}, doc-chunks-{id}, doc-notes-toggle/input/save, msg-doc-sources-{i}, msg-web-sources-{i}); chat flow sends question, renders answer with doc sources chip; notes editor opens; web-search toggle works; new session button present. Design is clean navy/turquoise/white, Spanish copy, good spacing/contrast.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/backend/tests/test_ori_api.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py startup: documents.update_many sets status='error' with 'Interrumpido por reinicio' for anything processing at startup. If upload+background task races with a quick restart, user sees spurious error. Minor.",
+    "parse_llm_json fallback regex r'\\{.*\\}' may misbehave if LLM returns multiple JSON blocks or nested braces; current tests pass but worth hardening (use last JSON block or strict parsing).",
+    "chat() fallback that scans answer text for web URLs when web_refs picking fails is a nice safety net; however it may double-count web sources if the model emits both W1 and plain URL. Not observed in tests.",
+    "upload_documents reads entire file into memory before scheduling background task — fine for POC but should stream for larger files.",
+    "No pagination on /documents (hard limit 500 via to_list). Acceptable for Fase 0."
+  ],
+  "updated_files": ["/app/backend/tests/test_ori_api.py"],
+  "success_rate": {"backend": "100% (21/21)", "frontend": "100% (all testids and flows verified)"},
+  "test_credentials": "n/a - no auth in Phase 0",
+  "seed_data_creation": "Used pre-existing fixtures seeded by main agent. test_upload_and_delete_lifecycle uploads TEST_delete_me.docx and deletes it (self-cleaning). test_patch_notes_retrievable mutates notes on tabla_estereopsis.png (unique AlfaZeta token in notes). Main agent should reset notes on tabla_estereopsis.png if needed.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All 7 fixtures (6 common + 1 profile:perfilA) are pre-seeded and ready. UI testids: upload-file-input, upload-scope-select, upload-tags-input, upload-dropzone, chat-input, chat-send-button, chat-scope-select, web-search-toggle, chat-new-session, profile-id-input, doc-row-{id}, doc-name-{id}, doc-status-{id}, doc-chunks-{id}, doc-delete-{id}, doc-notes-toggle-{id}, doc-notes-input-{id}, doc-tags-input-{id}, doc-notes-save-{id}, chat-message-{i}, msg-doc-sources-{i}, msg-web-sources-{i}, chat-loading. LLM calls take 10-30s; web search ~15s. Reuse /app/backend/tests/test_ori_api.py as regression suite. NB: side-effect test leaves 'AlfaZeta...' note on tabla_estereopsis.png.",
+  "rca of the issue": "No bugs found."
+}

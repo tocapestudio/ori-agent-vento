@@ -1,0 +1,104 @@
+{
+  "project_name": "Ori - Asistente IA de Optometría Clínica, Terapia Visual y Visión Deportiva",
+  "archetype": "ORGANIC & CLINICAL PRECISION",
+  "theme": "Light theme default with Navy & Turquoise accents (minimalist, crisp, medical-tech hybrid)",
+  "language": "es",
+  "colors": {
+    "primary": "#1B2A3A",
+    "primary_hover": "#14202C",
+    "secondary": "#2C3E50",
+    "accent": "#3FE0D0",
+    "accent_glow": "rgba(63, 224, 208, 0.25)",
+    "accent_muted": "#E6FAF8",
+    "accent_dark": "#16B8A7",
+    "background_light": "#F8FAFC",
+    "surface_light": "#FFFFFF",
+    "surface_border": "#E2E8F0",
+    "text_dark": "#0F172A",
+    "text_muted": "#64748B",
+    "status_success": "#10B981",
+    "status_warning": "#F59E0B",
+    "status_error": "#EF4444",
+    "status_processing": "#3B82F6"
+  },
+  "typography": {
+    "heading_font": "Outfit, Manrope, sans-serif",
+    "body_font": "Plus Jakarta Sans, Inter, sans-serif",
+    "mono_font": "JetBrains Mono, monospace",
+    "font_scales": {
+      "h1": "text-3xl sm:text-4xl font-bold tracking-tight text-[#1B2A3A]",
+      "h2": "text-xl sm:text-2xl font-semibold text-[#1B2A3A]",
+      "h3": "text-lg font-medium text-[#1B2A3A]",
+      "body": "text-sm sm:text-base text-slate-700 leading-relaxed",
+      "small": "text-xs sm:text-sm text-slate-500",
+      "chip": "text-xs font-medium tracking-wide"
+    }
+  },
+  "layout_and_structure": {
+    "app_shell": "Desktop-first, 3-pane layout with responsive collapsing mobile drawer",
+    "header": "Sticky top bar with glassmorphism backdrop-blur-md bg-white/80 border-b border-slate-200, z-40, containing active profile indicator, clinic access state, and section navigation",
+    "sidebar": "Left fixed sidebar (w-72 or w-80) for conversation history, profile context switcher ('¿Quién eres?'), quick navigation to Library & Settings",
+    "main_content": "Flexible container with max-w-7xl mx-auto, padding p-6 or p-8",
+    "bento_grid": "Used in document library and settings widgets: gap-6, rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+  },
+  "ori_mascot_spec": {
+    "identity": "Ori - Robot asistente de optometría clínica",
+    "visual_traits": "Robot blanco pulido, visor facial azul marino (#1B2A3A), ojos tipo píldora y aros de orejas turquesa (#3FE0D0) con brillo sutil, logotipo 'o' grabado en el pecho, antena central arriba",
+    "expressions": {
+      "neutral": "Avatar normal en chats y listas de conversación",
+      "happy": "Celebración de tarea completada, mensaje positivo",
+      "wink": "Interacción divertida o consejo rápido",
+      "thinking": "Estado de carga / generando respuesta en streaming",
+      "idea": "Respuesta completada o sugerencia clínica relevante",
+      "waving": "Bienvenida en el selector de perfil '¿Quién eres?' y pantalla de acceso"
+    },
+    "avatar_container": "Fondo blanco pulido o traslúcido, bordes suaves, sombra sutil aqua/turquesa"
+  },
+  "components_and_interactions": {
+    "access_gate": "Pantalla limpia minimalista con código de acceso del equipo clínico (changeable en Ajustes)",
+    "profile_picker": "Modal/Vista '¿Quién eres?' con avatares circulares coloridos, nombre, badge de perfil activo, acciones crear/editar/eliminar sin contraseña",
+    "library": {
+      "tabs": ["Común", "Mi biblioteca"],
+      "features": ["Buscador por nombre/etiqueta", "Subida de archivos drag&drop", "Vista previa y descarga del original", "Etiquetas personalizadas y notas por documento", "Estado de procesamiento (procesando / listo / error)"]
+    },
+    "chat": {
+      "scope_selector": "Chips interactivos per-message ('Mi biblioteca', 'Común', 'Ambas')",
+      "web_toggle": "Switch 'Buscar en internet'",
+      "quick_actions": [
+        "Interpretar caso",
+        "Protocolo terapia visual",
+        "Plan entrenamiento deportivo",
+        "Redactar informe",
+        "Ideas y adaptaciones"
+      ],
+      "citation_chips": "Chips interactivos clicables que abren el documento fuente original",
+      "streaming_ui": "Efecto de escritura fluida con indicador de Ori en modo 'thinking'",
+      "disclaimer_banner": "Banner fijo discreto: 'Recuerda usar únicamente casos anonimizados.'"
+    },
+    "settings": {
+      "sections": [
+        "Proveedor LLM (Gemini con API Key propia / Ollama local con URL base y nombres de modelos)",
+        "Selección de modelo Gemini",
+        "Cambiar código de acceso del equipo clínico"
+      ]
+    }
+  },
+  "image_urls": {
+    "optometry_equipment": "https://images.unsplash.com/photo-1539036776273-021ec1d78bec?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2Mzl8MHwxfHNlYXJjaHw0fHxvcHRvbWV0cnklMjBleWUlMjBleGFtJTIwdmlzaW9uJTIwdGhlcmFweSUyMGNsaW5pY2FsfGVufDB8fHx8MTc5MTM5Mzg4Nnww&ixlib=rb-4.1.0&q=85",
+    "snellen_chart": "https://images.unsplash.com/photo-1576210117723-cd06449a467d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2Mzl8MHwxfHNlYXJjaHwyfHxvcHRvbWV0cnklMjBleWUlMjBleGFtJTIwdmlzaW9uJTIwdGhlcmFweSUyMGNsaW5pY2FsfGVufDB8fHx8MTc5MTM5Mzg4Nnww&ixlib=rb-4.1.0&q=85",
+    "phoropter_device": "https://images.unsplash.com/photo-1677773382668-8a84321836e9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2Mzl8MHwxfHNlYXJjaHwzfHxvcHRvbWV0cnklMjBleWUlMjBleGFtJTIwdmlzaW9uJTIwdGhlcmFweSUyMGNsaW5pY2FsfGVufDB8fHx8MTc5MTM5Mzg4Nnww&ixlib=rb-4.1.0&q=85",
+    "eye_glasses_testing": "https://images.unsplash.com/photo-1517948430535-1e2469d314fe?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2Mzl8MHwxfHNlYXJjaHwxfHxvcHRvbWV0cnklMjBleWUlMjBleGFtJTIwdmlzaW9uJTIwdGhlcmFweSUyMGNsaW5pY2FsfGVufDB8fHx8MTc5MTM5Mzg4Nnww&ixlib=rb-4.1.0&q=85"
+  },
+  "testing_and_accessibility": {
+    "data_testid_convention": "All interactive elements must include descriptive kebab-case data-testid attributes (e.g., data-testid='access-code-input', data-testid='profile-card-dr-garcia', data-testid='chat-scope-comun')",
+    "aria_labels": "All icon-only buttons must have aria-label and data-testid",
+    "keyboard_navigation": "Full focus ring visibility using ring-2 ring-[#3FE0D0] ring-offset-2"
+  },
+  "instructions_to_main_agent": [
+    "Use Javascript (.js / .jsx) components matching existing project structure",
+    "Ensure all copy is in natural Spanish appropriate for clinical optometry and vision therapy professionals",
+    "Maintain strict color palette: White background, Navy (#1B2A3A) structural elements, Turquoise (#3FE0D0) interactive accents",
+    "Ensure Ori mascot expressions (waving, thinking, idea, neutral, happy, wink) are properly rendered in SVG or PNG formats with clean white/transparent backgrounds",
+    "All components must include data-testid tags for test automation"
+  ]
+}

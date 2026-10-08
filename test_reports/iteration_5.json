@@ -1,0 +1,30 @@
+{
+  "summary": "Phase 5 validated end-to-end: Chuletas (list+common/mine tabs+search, create-from-doc-card preselected, generate→ready with GFM table, edit/save, copy, print, save-to-library, regenerate panel, delete-with-confirm), Contact-lens calculator (all deterministic cases match exactly incl. invariance under rotation, invalid input error), conversation sidebar rename via menu & double-click (persists after reload) + Esc cancel + delete-with-confirm (owner only, 403 for non-owner verified via API), auto-title changes within ~6s (verified via API polling), empty-chat layout fits with no scroll at 1366x768 and 1536x780 (quick-actions is single horizontally scrollable row), Ori images (access/picker/empty) load, favicon.png returns 200. Backend 4/4 pytest pass. LLM generations used: 2 (one cheatsheet creation + one auto-title in isolated profile).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Biblioteca (library-tags select)", "issues": ["Dev-time console warning: '<span> cannot be a child of <option>'. Hydration warning from Emergent dev-tool wrapper injecting a <span> inside <option> at LibraryPage.jsx:115. Harmless in production (ignored at runtime) but noisy in dev."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_cheatsheets_phase5.py", "/app/test_reports/pytest/phase5.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "routes_cheatsheets.save_to_library embeds profile_id by splitting scope on ':' — fragile if scope naming changes; consider deriving from library field directly.",
+    "generate() silently uses the first 150000 characters of chunks; no indication to user if context was truncated when many docs are selected (up to 10).",
+    "auto_title has no de-dup check — if initial fallback is already a reasonable title, Gemini may rewrite to a near-identical one. OK but minor."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_cheatsheets_phase5.py",
+    "/app/test_reports/iteration_5.json",
+    "/app/test_reports/pytest/phase5.xml"
+  ],
+  "success_rate": {"backend": "100% (4/4)", "frontend": "100% (all critical flows)"},
+  "test_credentials": "Team access code Orion9944+; profile Paula id 6ac681af4c6b10bd64f5d546",
+  "seed_data_creation": "None persisted. Created and cleaned up during this run: 1 TEST_UI_chuleta_* cheatsheet + its 'Chuleta - TEST_UI_chuleta_*.md' library doc; also cleaned up iteration-4 leftovers (cheatsheet 6ac6b465f1fbc9788f7f0ce6 and doc 6ac6b485f1fbc9788f7f0ce7) per request. Backend pytest also creates/deletes TEST_Alt_phase5 profile + TEST_pytest_chuleta cheatsheet.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All Phase-5 features pass. Deterministic CL-calc numbers verified exactly: over mode −3.00+(−0.50)=−3.50; (−5.00−1.25×180)+(+0.25−0.50×180)=−4.75−1.75×180; invariance of (−2.00−1.25×20)+plano under 10° left and 15° right (ordered unchanged); spec 0.00−1.25×180 rot 10 left → 10°. Error shown for positive cylinder and axis>180. Auto-title went from '¿Qué es la agudeza visual? Explica en una…' / 'Explica en una frase qué es la agudeza…' to short Gemini-generated title in ~6s. Paula currently has 0 cheatsheets after cleanup. There remains a dev-only React hydration warning about <span> inside <option> at LibraryPage.jsx:115 injected by Emergent dev wrapper – harmless.",
+  "rca of the issue": "No issues found."
+}

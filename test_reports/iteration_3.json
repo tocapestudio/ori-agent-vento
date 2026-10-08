@@ -1,0 +1,26 @@
+{
+  "summary": "Iteration 3: tested the new Folders feature (backend + UI) and the web_sources fix. 7/7 backend pytest cases passed covering folder CRUD, nested subfolders, parent/cycle guards, cross-library guards (folder create, folder move, folder-id in upload, document move), delete-folder promotes contents to the parent (both documents and sub-folders), deleting a profile removes its folders, and the chat web_sources list is non-empty with proper {label,title,url,snippet} when 'Buscar en internet' is on. UI Playwright: logged in with Orion9944+, picked Paula, went to Biblioteca › Mi biblioteca, created TEST_UI_Folder, opened it (breadcrumb-{id} + upload-destination both show the folder name), created a nested TEST_UI_Sub, returned via breadcrumb-root, renamed via folder-menu/folder-rename, deleted via folder-delete + folder-delete-confirm-confirm and verified the sub folder was promoted to the root, then created TEST_UI_Dest and used Mover a… (move-dialog → move-target-{id} → move-confirm) to move the sub into Dest. Chat UI: toggled web-search-toggle on, asked the miopía-adolescentes question, received an answer with msg-web-sources-{i} and 2 web-source-link anchors (target _blank, valid https URLs). The LLM answer in this run embedded URLs directly (no [W#] labels) so no inline-web-cite chips were rendered — matches the spec which says the inline chips appear ONLY when the answer contains [W#] markers, and the Fuente web block is populated via URL matching. All TEST_ artifacts (folders, conversation, 2 created temp profiles via the backend suite) were cleaned up at the end. Paula and the pre-existing user folder 'BIH - Neurología' + its PDF were preserved.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_ori_folders.py",
+    "/app/test_reports/pytest/pytest_folders.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "routes_folders.update_folder: a PATCH body with name='' (empty after strip) would silently skip the change because `if body.name:` is used after Pydantic validation that already requires min_length=1 — fine, but passing only unknown keys returns the folder unchanged with 200. Acceptable but could be a 400 for empty-change requests.",
+    "routes_folders.delete_folder does not re-parent descendants recursively beyond direct children; grandchildren of the deleted folder keep their parent_id (which points at the deleted folder's direct child that was moved up). That is correct for a 'promote one level' semantics but worth confirming matches the product intent.",
+    "routes_chat.extract_sources: the URL match `w['url'] in answer` could pick up URLs that happen to be substrings of larger URLs in future responses — not a current defect since Gemini outputs full URLs.",
+    "LibraryPage drag-and-drop: the page-level onDrop handler calls preventDefault inside an `if files` guard — document drags (DOC_DRAG_TYPE) are already consumed by FolderTile/Crumb via stopPropagation, so no regression. Good."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ori_folders.py (new)"
+  ],
+  "success_rate": {"backend": "100% (7/7 new)", "frontend": "100% (folders CRUD/nav/rename/delete-promote/move-dialog + chat web sources all verified)"},
+  "test_credentials": "Access code Orion9944+, Paula id 6ac681af4c6b10bd64f5d546",
+  "seed_data_creation": "None left behind. Backend suite creates/deletes TEST_ profiles + folders + docs in-place. UI suite created TEST_UI_Folder, TEST_UI_Sub, TEST_UI_Dest and the miopía conversation, all deleted at the end. The leftover TEST_UI_Folder from the first failed run was also deleted during the second UI run.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Phase 1 regression lives in /app/backend/tests/test_ori_phase1.py and the new folders+web regression in /app/backend/tests/test_ori_folders.py. Both can be run with `pytest /app/backend/tests/ -v`. The 'BIH - Neurología' folder in Paula's Mi biblioteca was pre-existing and must be preserved along with its PDF 'O. Aferente IMPRIMIR.pdf'. Gemini can occasionally return 503; backend retries/falls back, so a flaky web-search test is best retried once.",
+  "rca of the issue": "N/A — no bugs reproduced; both the web_sources extraction fix and the full folders feature behave per the spec."
+}

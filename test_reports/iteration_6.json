@@ -1,0 +1,32 @@
+{
+  "summary": "Phase 6 validated: /api/orders CRUD (unknown→empty, PUT persists & overwrites, invalid-key→400, auth required) 5/5 pytest pass. Plantillas custom reorder (down moves card to pos 2, survives reload, order key templates:shared) + name sort hides handles and alpha-orders titles. Calculadoras reorder via calc-sort-up/down works for all 8 cards (ids match spec: accommodation, demand, prism, refraction, aca, prism-criteria, contact-lens, norms), persists after reload (key calcs:<pid>). Biblioteca sort select present (library-sort-select with Orden personalizado default); library-upload-folder-button + hidden library-folder-input with webkitdirectory=true verified. FOLDER UPLOAD end-to-end: uploaded nested dir (root + SubA + SubB with 3 .png files + .txt + .DS_Store); status 'Subiendo carpeta: 0 de 3 archivos…' appeared, final summary 'Carpeta subida: 3 subidos · 2 omitidos · 0 errores' with folder-upload-skipped listing both skipped files with correct reasons ('formato no soportado', 'archivo oculto o temporal'); subfolder structure recreated. All created folders cleaned up via API. Empty chat at 1366x768 AND 1536x780: no page scroll, no chat-messages scroll, 8 quick chips wrap to 2 rows with 0 clipped. Chat width when messaging: container+composer expand to full available (1030px at 1366 viewport with 288px sidebar — i.e. correctly bounded by 1200px cap). Quick-action chip click still fills textarea (regression PASS). Chuletas sort select renders with correct options (custom/name/date) — reorder not exercised because Paula has 0 cheatsheets after iteration-5 cleanup. Favoritos sort select only renders when items present; Paula has 0 favorites so skipped. Biblioteca folder-sort reorder not exercised in Común (empty) nor Mi (only 1 folder, needs ≥2).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_orders_phase6.py",
+    "/app/test_reports/pytest/orders_phase6.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "routes_order.check() uses a shared regex ^[\\w:.\\-]{1,200}$ — slashes are rejected by regex, but FastAPI's path converter also 404s on slashes before validation runs, so clients that produce slash-containing keys get 404 (not the semantic 400). Consider documenting the allowed charset or using a path converter that permits ':' only. Minor UX nit.",
+    "routes_order.put_order has no size cap on individual id string length (only list length). Could be hardened by Field(min_length/max_length) on list items.",
+    "FolderUploadStatus / folderUpload.js: the status element unmounts as soon as summary appears — summary and skipped are visible but the status with 'X de N' progress disappears before the user can read final counts (acceptable, just noting).",
+    "Favoritos/Chuletas pages do not render the SortSelect when list is empty — intentional, but may surprise users; low priority."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_orders_phase6.py",
+    "/app/test_reports/iteration_6.json",
+    "/app/test_reports/pytest/orders_phase6.xml"
+  ],
+  "success_rate": {"backend": "100% (5/5)", "frontend": "100% (all exercised flows)"},
+  "test_credentials": "Team access code Orion9944+; profile Paula id 6ac681af4c6b10bd64f5d546",
+  "seed_data_creation": "Created and fully cleaned up: 3 TEST_ folders under Común (TEST_folderup_g6wjju8f + TEST_SubA + TEST_SubB) with 3 uploaded png docs — all deleted recursively via /api/folders/{id}?recursive=true. Deleted test conversation 'Definición de agudeza visual' from Paula. Reset order keys test:phase6:persist and test:unknown:xyz to empty []. Plantillas and Calculadoras custom orders were restored to original (verified by up-click round trip).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All Phase-6 features pass. Backend /api/orders is behind require_team auth (401 without token). Plantillas data-testid prefix is 'template-sort-{select|up|down|handle}-<id>'; Chuletas 'cheat-sort-...'; Favoritos 'favorite-sort-...'; Calcs 'calc-sort-...' (no sort-select, always custom); Biblioteca 'library-sort-select', 'folder-sort-...', 'doc-sort-...'; chat chips 'quick-action-<slug>'. Folder upload uses Playwright inp.set_input_files(DIRECTORY_PATH) when the input has webkitdirectory=true (passing individual files errors out). Chuletas/Favoritos were skipped for reorder because Paula has 0 items — a future agent can first POST a cheatsheet / favorite then reorder. Observed only 1 folder in Paula's 'Mi biblioteca' tab ('BIH - Neurología'), not enough for folder reorder test — create a second folder first if needed.",
+  "rca of the issue": "No issues found."
+}

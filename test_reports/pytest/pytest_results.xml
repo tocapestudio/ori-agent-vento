@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="23" time="212.758" timestamp="2026-10-07T17:40:45.066456+00:00" hostname="agent-env-fed9a106-ff5c-444b-92b0-a4cd49f37369"><testcase classname="tests.test_ori_phase1" name="test_access_wrong_code_401" time="0.548" /><testcase classname="tests.test_ori_phase1" name="test_access_correct_returns_token" time="0.386" /><testcase classname="tests.test_ori_phase1" name="test_protected_without_token_401" time="0.411" /><testcase classname="tests.test_ori_phase1" name="test_auth_check" time="0.548" /><testcase classname="tests.test_ori_phase1" name="test_list_profiles_contains_paula" time="0.127" /><testcase classname="tests.test_ori_phase1" name="test_profile_crud" time="0.538" /><testcase classname="tests.test_ori_phase1" name="test_profile_delete_removes_data" time="0.390" /><testcase classname="tests.test_ori_phase1" name="test_list_common_has_fixtures" time="0.157" /><testcase classname="tests.test_ori_phase1" name="test_list_paula_mine_has_omega" time="0.193" /><testcase classname="tests.test_ori_phase1" name="test_mine_requires_profile_id" time="0.170" /><testcase classname="tests.test_ori_phase1" name="test_document_get_and_preview" time="0.271" /><testcase classname="tests.test_ori_phase1" name="test_document_file_inline_and_download" time="0.427" /><testcase classname="tests.test_ori_phase1" name="test_upload_patch_delete_lifecycle" time="1.535" /><testcase classname="tests.test_ori_phase1" name="test_upload_unsupported_type" time="0.132" /><testcase classname="tests.test_ori_phase1" name="test_chat_orion_alfa_grounded" time="41.081" /><testcase classname="tests.test_ori_phase1" name="test_chat_not_found_no_web" time="18.311" /><testcase classname="tests.test_ori_phase1" name="test_chat_scope_mine_vs_common_for_omega" time="60.206"><failure message="requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)">/root/.venv/lib/python3.11/site-packages/requests/models.py:1116: in json
+    return complexjson.loads(self.text, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:355: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+backend/tests/test_ori_phase1.py:216: in test_chat_scope_mine_vs_common_for_omega
+    d = r.json()
+        ^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/models.py:1120: in json
+    raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+E   requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)</failure></testcase><testcase classname="tests.test_ori_phase1" name="test_conversations_persist_and_list" time="60.266"><failure message="assert 502 == 200&#10; +  where 502 = &lt;Response [502]&gt;.status_code">backend/tests/test_ori_phase1.py:231: in test_conversations_persist_and_list
+    assert r.status_code == 200
+E   assert 502 == 200
+E    +  where 502 = &lt;Response [502]&gt;.status_code</failure></testcase><testcase classname="tests.test_ori_phase1" name="test_chat_stream_sse" time="16.824" /><testcase classname="tests.test_ori_phase1" name="test_settings_mask_key" time="0.128" /><testcase classname="tests.test_ori_phase1" name="test_settings_test_llm" time="7.030" /><testcase classname="tests.test_ori_phase1" name="test_settings_switch_ollama_and_back" time="0.474" /><testcase classname="tests.test_ori_phase1" name="test_settings_change_access_code_and_revert" time="2.194" /></testsuite></testsuites>

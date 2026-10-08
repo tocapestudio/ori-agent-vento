@@ -1,0 +1,38 @@
+{
+  "summary": "Phase 1 regression: wrote /app/backend/tests/test_ori_phase1.py (23 pytest cases). First run: 21/23 passed; the 2 that failed (test_chat_scope_mine_vs_common_for_omega, test_conversations_persist_and_list) were transient Gemini 502 upstream errors and PASSED on retry. Final backend result: 23/23 (100%). Covered: access gate (wrong→401 'Código de acceso incorrecto', correct→token; protected routes 401 w/o token; auth/check with token); profiles CRUD (Paula present, create/edit/delete temp profile, cascade delete verified via subsequent 404); documents (common has 6 fixtures + user real doc; Paula mine has caso_omega_perfilA.docx; GET /documents/{id} returns preview array; GET /documents/{id}/file inline PDF bytes + attachment via download=true; token query-param works; upload lifecycle protocolo_vergencias.docx →processing→ready→patch tags/notes→reprocess→delete→404; unsupported .exe→400; mine without profile_id→400); chat (Orion-Alfa grounded w/ guia_ambliopia source + web_sources=[]; Lumen-77 fabricated question returns 'no lo encuentro' with empty doc/web sources; scope=common hides Omega, scope=mine finds it on Paula; SSE stream emits meta→delta→done; cross-profile write to foreign conversation_id→403; conversation listing/get/patch title/delete work; messages persisted with user+assistant roles); settings (GET masks key, no leak of AQ.Ab8RN6; test-llm returns ok+backend+message; switch to ollama returns ok:false gracefully and reverted to gemini; access-code change issues new token, invalidates old, old code can't log in, reverted to Orion9944+). UI (Playwright): access-code-input + waving Ori, wrong code shows access-error, correct→profile-picker with waving avatar; profile-create → dialog → profile-save creates visible card; profile-edit updates name; profile-delete→confirm removes; Paula pick→chat page shows conversation-sidebar, new-conversation-button, chat-scope-common/mine/both, web-search-toggle, anonymized-banner, all 5 quick-action-* buttons; sending Orion-Alfa question streams response with msg-ori-avatar-1 data-expression='thinking' during streaming and 'idea' when complete; 1 inline source chip rendered; clicking source-chip opens doc-preview-dialog with doc-preview-iframe + doc-preview-download for PDFs; nav-library shows 7 common cards + 2 mine cards; library-tab-common/mine switch works; library-search-input filters cards; nav-settings exposes settings-backend-gemini/ollama, settings-gemini-model, settings-test-llm-button, and the three settings-access-current/next/confirm + settings-access-save fields; profile-menu-trigger reveals switch-profile-button + logout-menu-button; session persists after page reload (localStorage).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/chat (free-tier Gemini)", "issue": "Intermittent upstream 502 Bad Gateway (~10% in this run). Retries help but a longer backoff / request-level retry wrapper would smooth user experience."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "ProfileDialog", "issues": ["Radix DialogContent missing aria-describedby (console warning). Non-blocking a11y nit."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_ori_phase1.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Add aria-describedby or DialogDescription to ProfileDialog to silence Radix a11y warning (minor)."
+  ],
+  "critical_code_review_comments": [
+    "routes_core.put_settings strips every field then skips empty ones — fine, but will silently ignore attempts to clear a field (e.g. tag/model). If reset-to-default is needed, require an explicit sentinel.",
+    "routes_chat.extract_sources matches citation groups via regex r'\\[([^\\[\\]]{3,250})\\]' — this will also match markdown link labels like [texto](url). Could create false-positive doc_sources if a doc file_name happens to appear inside such a label.",
+    "auth.register_fail resets `count` to 0 after locking; a user retrying right after unlock won't accumulate fails until the next window. Minor UX note.",
+    "server.startup kills chunks whose doc isn't in a {} projection to_list(100000); the 100000 cap is implicit — acceptable at Phase 1 scale but worth noting.",
+    "chat/stream SSE: on llm.LLMError the error event is yielded but the StreamingResponse still returns 200 (expected for SSE). Front-end must treat 'error' events specially; verify UI handles that path (not covered here)."
+  ],
+  "updated_files": ["/app/backend/tests/test_ori_phase1.py"],
+  "success_rate": {"backend": "100% (23/23 after retrying 2 flaky LLM calls)", "frontend": "100% of required testids and flows verified"},
+  "test_credentials": "Team code Orion9944+ (unchanged at end of run — the change-and-revert test restores it).",
+  "seed_data_creation": "No permanent seed data. Transient test profiles (TEST_*) and uploaded TEST_delete_me.docx are deleted by their own tests. During a UI run I created+deleted a TEST profile; one leftover 'TEST_UIProfile' from an earlier run was cleaned up by the second UI pass (deleted via profile-delete flow).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Reuse /app/backend/tests/test_ori_phase1.py as the Phase-1 regression. Fixtures at /app/tests/fixtures/. Access code is Orion9944+ (bcrypt-hashed, version-based JWT invalidation). Paula profile id = 6ac681af4c6b10bd64f5d546 and must not be deleted. Common library expected to contain 7 docs (6 fixtures + 'D. y Entorno IMPRIMIR.pdf' has_original=false). Chat calls can take 10-40s with Gemini free tier and occasionally 502 — always retry once before failing. The settings-access-code test rotates the code and restores it; if your session token is session-scoped and that test runs before others, add a token refresh fixture. UI testids all present and stable.",
+  "rca of the issue": "No bugs found. The two failures in the initial pytest run were transient Gemini 502 Bad Gateway from the free-tier upstream — both passed on immediate re-run with identical inputs. Backend code (routes_chat.run_chat) properly surfaces the LLM error with the Spanish 'descansando' message when it finally gives up, so UX is already graceful."
+}
