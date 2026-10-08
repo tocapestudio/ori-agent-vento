@@ -100,7 +100,7 @@ def test_cross_library_move_rejected(H, temp_profile):
         requests.delete(f"{API}/folders/{rm['id']}", headers=H, timeout=15)
 
 
-def test_delete_folder_moves_contents_to_parent(H, temp_profile):
+def test_delete_folder_keep_contents_moves_to_parent(H, temp_profile):
     # mine library: root -> child, upload doc into child, delete child -> doc should go to root
     root = requests.post(f"{API}/folders", headers=H,
                          json={"name": "TEST_Parent", "library": "mine", "profile_id": temp_profile}, timeout=15).json()
@@ -120,7 +120,7 @@ def test_delete_folder_moves_contents_to_parent(H, temp_profile):
                               "parent_id": child["id"]}, timeout=15).json()
     try:
         # delete child
-        rd = requests.delete(f"{API}/folders/{child['id']}", headers=H, timeout=20)
+        rd = requests.delete(f"{API}/folders/{child['id']}", headers=H, params={"keep_contents": "true"}, timeout=20)
         assert rd.status_code == 200
         body = rd.json()
         assert body["moved_documents"] == 1
@@ -208,3 +208,31 @@ def test_chat_web_sources_non_empty_when_web_search_on(H):
         assert w.get("url") and w.get("title") is not None
     # cleanup
     requests.delete(f"{API}/conversations/{d['conversation_id']}", headers=H, timeout=15)
+
+
+def test_delete_folder_removes_everything_inside(H, temp_profile):
+    # root -> sub, with one doc in each; deleting root removes both folders and both docs
+    root = requests.post(f"{API}/folders", headers=H,
+                         json={"name": "TEST_DelAll", "library": "mine", "profile_id": temp_profile}, timeout=15).json()
+    sub = requests.post(f"{API}/folders", headers=H,
+                        json={"name": "TEST_DelAllSub", "library": "mine", "profile_id": temp_profile,
+                              "parent_id": root["id"]}, timeout=15).json()
+    ids = []
+    for fid, name in ((root["id"], "TEST_a.docx"), (sub["id"], "TEST_b.docx")):
+        files = {"files": (name, b"PK\x03\x04dummy",
+                           "application/vnd.openxmlformats-officedocument.wordprocessingml.document")}
+        up = requests.post(f"{API}/documents/upload", headers=H, files=files,
+                           data={"library": "mine", "profile_id": temp_profile, "folder_id": fid}, timeout=30)
+        assert up.status_code == 200, up.text
+        ids.append(up.json()[0]["id"])
+    rd = requests.delete(f"{API}/folders/{root['id']}", headers=H, timeout=30)
+    assert rd.status_code == 200, rd.text
+    body = rd.json()
+    assert body["deleted_documents"] == 2
+    assert body["deleted_folders"] == 1
+    docs = requests.get(f"{API}/documents", headers=H,
+                        params={"library": "mine", "profile_id": temp_profile}, timeout=15).json()
+    assert not any(d["id"] in ids for d in docs)
+    folders = requests.get(f"{API}/folders", headers=H,
+                           params={"library": "mine", "profile_id": temp_profile}, timeout=15).json()
+    assert not any(f["id"] in (root["id"], sub["id"]) for f in folders)

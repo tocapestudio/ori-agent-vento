@@ -10,7 +10,7 @@ export const FolderTile = ({ folder, docCount, subCount, onOpen, onDropDoc, onRe
       onDragOver={(e) => { if (e.dataTransfer.types.includes(DOC_DRAG_TYPE)) { e.preventDefault(); setOver(true); } }}
       onDragLeave={() => setOver(false)}
       onDrop={(e) => { e.preventDefault(); e.stopPropagation(); setOver(false); const d = e.dataTransfer.getData(DOC_DRAG_TYPE); if (d) onDropDoc(d, folder.id); }}
-      className={`group flex cursor-pointer items-center gap-3 rounded-xl border bg-white px-4 py-3 shadow-sm transition-[box-shadow,border-color,background-color] hover:shadow-md ori-fade ${over ? "border-[#3FE0D0] bg-[#E6FAF8]" : "border-slate-200"}`}>
+      className={`group flex h-[68px] cursor-pointer items-center gap-3 rounded-xl border bg-white px-4 py-3 shadow-sm transition-[box-shadow,border-color,background-color] hover:shadow-md ori-fade ${over ? "border-[#3FE0D0] bg-[#E6FAF8]" : "border-slate-200"}`}>
       {grip}
       <Folder size={22} className="shrink-0 fill-[#3FE0D0]/25 text-[#16B8A7]" />
       <div className="min-w-0 flex-1">

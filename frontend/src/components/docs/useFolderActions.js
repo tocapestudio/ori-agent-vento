@@ -30,7 +30,8 @@ export const useFolderActions = ({ library, profileId, current, setCurrent, fold
     const { data } = await api.delete(`/folders/${toDelete.id}`);
     if (folders.descendantsOf(toDelete.id).has(current)) setCurrent(data.parent_id);
     setToDelete(null);
-  }, "Carpeta eliminada; su contenido se movió a la carpeta superior");
+    toast.success(`Carpeta eliminada${data.deleted_documents ? ` junto con ${data.deleted_documents} documento(s)` : ""}`);
+  });
 
   return {
     nameDialog, setNameDialog, saveName,

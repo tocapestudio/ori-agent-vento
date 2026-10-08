@@ -1,0 +1,8 @@
+node_modules/
+_build/
+packaging/build/
+backend/storage/
+backend/index/
+backend/.env
+backend/.models/
+__pycache__/

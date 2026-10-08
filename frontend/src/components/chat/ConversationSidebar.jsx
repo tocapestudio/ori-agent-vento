@@ -7,8 +7,18 @@ import { useApp } from "@/context/AppContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/layout/ConfirmDialog";
 import { SortableList, applyOrder, useOrder } from "@/components/common/Sortable";
+import { setLastConv } from "@/lib/lastConv";
 
-const fmt = (iso) => new Date(iso).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+const fmt = (iso) => {
+  const d = new Date(iso);
+  const hora = d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  const hoy = new Date();
+  const ayer = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 1);
+  if (d.toDateString() === hoy.toDateString()) return `Hoy, ${hora}`;
+  if (d.toDateString() === ayer.toDateString()) return `Ayer, ${hora}`;
+  const opts = { day: "numeric", month: "short", ...(d.getFullYear() !== hoy.getFullYear() ? { year: "numeric" } : {}) };
+  return `${d.toLocaleDateString("es-ES", opts)}, ${hora}`;
+};
 
 const ConvItem = ({ c, active, own, pinned, grip, onRename, onDelete, onPin }) => {
   const navigate = useNavigate();
@@ -36,7 +46,7 @@ const ConvItem = ({ c, active, own, pinned, grip, onRename, onDelete, onPin }) =
             {pinned && <Pin size={11} className="shrink-0 fill-[#3FE0D0] text-[#16B8A7]" data-testid={`conversation-pinned-${c.id}`} />}<span className="truncate">{c.title}</span>
           </p>
         )}
-        <p className="text-[11px] text-slate-400">{fmt(c.updated_at)} · {c.message_count / 2 || 0} preguntas</p>
+        <p className="text-[11px] text-slate-400" title={`Creada: ${new Date(c.created_at || c.updated_at).toLocaleString("es-ES")}`}>{fmt(c.updated_at)} · {c.message_count / 2 || 0} preguntas</p>
       </div>
       {own && !editing && (
         <DropdownMenu>
@@ -101,7 +111,7 @@ export const ConversationSidebar = ({ activeId, refreshKey, onRenamed }) => {
     setToDelete(null);
     try { await api.delete(`/conversations/${c.id}`, { params: { profile_id: profile.id } }); toast.success("Conversación eliminada"); }
     catch (e) { toast.error(errMsg(e)); }
-    if (c.id === activeId) navigate("/chat");
+    if (c.id === activeId) { setLastConv(profile.id, null); navigate("/chat", { state: { fresh: true } }); }
     load();
   };
   const own = viewing === profile.id;
@@ -124,7 +134,7 @@ export const ConversationSidebar = ({ activeId, refreshKey, onRenamed }) => {
       render={(c, grip) => <ConvItem c={c} grip={grip} active={c.id === activeId} own={own} pinned={pins.includes(c.id)} onRename={rename} onDelete={setToDelete} onPin={togglePin} />} />
   );
 
-  const newConv = () => { setViewing(profile.id); navigate("/chat"); if (sb.small) sb.toggle(true); };
+  const newConv = () => { setViewing(profile.id); setLastConv(profile.id, null); navigate("/chat", { state: { fresh: true } }); if (sb.small) sb.toggle(true); };
   const W = { width: sb.collapsed ? 56 : 288 };
 
   return (

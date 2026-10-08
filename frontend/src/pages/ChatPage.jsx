@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Star } from "lucide-react";
 import { api, streamChat } from "@/lib/api";
@@ -10,6 +10,7 @@ import { MessageBubble } from "@/components/chat/MessageBubble";
 import { Composer } from "@/components/chat/Composer";
 import { DocSidePanel } from "@/components/docs/DocSidePanel";
 import { OriHero } from "@/components/ori/OriAvatar";
+import { getLastConv, setLastConv } from "@/lib/lastConv";
 
 const EmptyState = ({ name }) => (
   <div className="flex flex-col items-center justify-center text-center py-2 ori-fade" data-testid="chat-empty-state">
@@ -22,6 +23,7 @@ const EmptyState = ({ name }) => (
 export default function ChatPage() {
   const { conversationId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { profile } = useApp();
   const [conv, setConv] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -38,12 +40,18 @@ export default function ChatPage() {
   const newConvId = useRef(null);
   const bottom = useRef(null);
 
+  const fresh = !!location.state?.fresh;
   useEffect(() => {
-    if (!conversationId) { setConv(null); setMessages([]); return; }
+    if (!conversationId) {
+      const last = !fresh && getLastConv(profile.id);
+      if (last) { navigate(`/chat/${last}`, { replace: true }); return; }
+      setConv(null); setMessages([]); return;
+    }
+    setLastConv(profile.id, conversationId);
     if (skipLoad.current === conversationId) return;
     api.get(`/conversations/${conversationId}`).then(({ data }) => { setConv(data.conversation); setMessages(data.messages); })
-      .catch(() => { toast.error("Conversación no encontrada"); navigate("/chat"); });
-  }, [conversationId, navigate]);
+      .catch(() => { setLastConv(profile.id, null); toast.error("Conversación no encontrada"); navigate("/chat", { state: { fresh: true } }); });
+  }, [conversationId, navigate, fresh, profile.id]);
 
   useEffect(() => {
     const el = focusMsg && !busy && document.querySelector(`[data-message-id="${focusMsg}"]`);

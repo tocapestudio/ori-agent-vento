@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 
 from deps import db
 from models import FolderIn, FolderRecord, FolderUpdate, MoveIn
-from routes_documents import library_scope, oid
+from routes_documents import delete_doc_data, library_scope, oid
 
 router = APIRouter()
 
@@ -58,9 +58,28 @@ async def update_folder(folder_id: str, body: FolderUpdate):
     return await get_folder(folder_id)
 
 
+async def descendant_ids(folder_id: str, scope: str) -> list:
+    """The folder itself plus every subfolder below it (same library)."""
+    ids, frontier = [folder_id], [folder_id]
+    while frontier:
+        children = await db.folders.find({"parent_id": {"$in": frontier}, "scope": scope}, {"_id": 1}).to_list(10000)
+        frontier = [str(c["_id"]) for c in children if str(c["_id"]) not in ids]
+        ids.extend(frontier)
+    return ids
+
+
 @router.delete("/folders/{folder_id}")
-async def delete_folder(folder_id: str):
+async def delete_folder(folder_id: str, keep_contents: bool = False):
     folder = await get_folder(folder_id)
+    if not keep_contents:
+        # Borra la carpeta con todo lo que contiene: subcarpetas, documentos, archivos originales e índice.
+        ids = await descendant_ids(folder_id, folder.scope)
+        docs = await db.documents.find({"folder_id": {"$in": ids}}, {"_id": 1}).to_list(100000)
+        for d in docs:
+            await delete_doc_data(str(d["_id"]))
+        await db.folders.delete_many({"_id": {"$in": [ObjectId(i) for i in ids]}})
+        return {"deleted": folder_id, "deleted_documents": len(docs), "deleted_folders": len(ids) - 1,
+                "parent_id": folder.parent_id}
     moved_docs = await db.documents.update_many({"folder_id": folder_id}, {"$set": {"folder_id": folder.parent_id}})
     moved_folders = await db.folders.update_many({"parent_id": folder_id}, {"$set": {"parent_id": folder.parent_id}})
     await db.folders.delete_one({"_id": ObjectId(folder_id)})

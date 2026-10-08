@@ -50,7 +50,8 @@ export default function LibraryPage() {
 
   const allTags = useMemo(() => [...new Set(docs.flatMap((d) => d.tags))].sort(), [docs]);
   const searching = !!(q.trim() || tag);
-  const [sort, setSort] = useState("custom");
+  const [sort, setSortState] = useState(() => { try { return localStorage.getItem("ori.library.sort") || "name"; } catch { return "name"; } });
+  const setSort = (v) => { setSortState(v); try { localStorage.setItem("ori.library.sort", v); } catch { /* sin almacenamiento */ } };
   const orderBase = `lib:${library === "common" ? "common" : `profile:${profile.id}`}:${current || "root"}`;
   const [folderOrder, saveFolderOrder] = useOrder(`${orderBase}:folders`);
   const [docOrder, saveDocOrder] = useOrder(`${orderBase}:docs`);
@@ -64,6 +65,13 @@ export default function LibraryPage() {
   const subfolders = searching ? [] : applyOrder(folders.childrenOf(current), folderOrder, sort, "name", "created_at");
   const canReorder = sort === "custom" && !searching;
   const libLabel = library === "common" ? "Común" : "Mi biblioteca";
+  const deleteSummary = (id) => {
+    const tree = folders.descendantsOf(id);
+    const n = docs.filter((d) => tree.has(folders.folderOf(d))).length;
+    const sub = tree.size - 1;
+    if (!n && !sub) return "La carpeta está vacía.";
+    return `Se borrarán también ${n} documento(s)${sub ? ` y ${sub} subcarpeta(s)` : ""} que contiene, con sus archivos originales. Esta acción no se puede deshacer.`;
+  };
   const pathLabel = (d) => {
     const p = folders.pathOf(folders.folderOf(d)).map((f) => f.name);
     return [libLabel, ...p].join(" / ");
@@ -163,7 +171,7 @@ export default function LibraryPage() {
         )}
         {subfolders.length > 0 && (
           <div data-testid="folder-grid">
-            <SortableList items={subfolders} onReorder={saveFolderOrder} disabled={!canReorder} testPrefix="folder-sort" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            <SortableList items={subfolders} onReorder={saveFolderOrder} disabled={!canReorder} testPrefix="folder-sort" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" itemClassName={() => "h-full"}
               render={(f, grip) => (
               <FolderTile folder={f} grip={grip} docCount={docs.filter((d) => folders.folderOf(d) === f.id).length}
                 subCount={folders.childrenOf(f.id).length} onOpen={setCurrent} onDropDoc={fa.moveDoc}
@@ -178,7 +186,7 @@ export default function LibraryPage() {
           </div>
         ) : (
           <div data-testid="library-grid">
-            <SortableList items={shown} onReorder={saveDocOrder} disabled={!canReorder} testPrefix="doc-sort" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            <SortableList items={shown} onReorder={saveDocOrder} disabled={!canReorder} testPrefix="doc-sort" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" itemClassName={() => "h-full"}
               render={(d, grip) => (
               <DocCard doc={d} grip={grip} onPreview={(x) => setPreview({ doc_id: x.id, file_name: x.file_name })}
                 onEdit={setEditing} onDelete={setToDelete} onReprocess={reprocess} onTag={setTag}
@@ -192,7 +200,7 @@ export default function LibraryPage() {
       <MoveDialog target={fa.moveTarget} folders={folders} onClose={() => fa.setMoveTarget(null)} onMove={fa.confirmMove} />
       <ConfirmDialog open={!!fa.toDelete} onOpenChange={(o) => !o && fa.setToDelete(null)} onConfirm={fa.deleteFolder}
         testId="folder-delete-confirm" confirmLabel="Eliminar carpeta" title={`¿Eliminar la carpeta "${fa.toDelete?.name}"?`}
-        description={fa.toDelete ? `Sus ${docs.filter((d) => folders.folderOf(d) === fa.toDelete.id).length} documento(s) y ${folders.childrenOf(fa.toDelete.id).length} subcarpeta(s) se moverán a la carpeta superior. No se borra ningún documento.` : ""} />
+        description={fa.toDelete ? deleteSummary(fa.toDelete.id) : ""} />
       <DocEditDialog doc={editing} onClose={() => setEditing(null)} onSave={saveEdit} />
       <DocPreviewDialog target={preview} onClose={() => setPreview(null)} />
       <ConfirmDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)} onConfirm={remove} testId="doc-delete-confirm"

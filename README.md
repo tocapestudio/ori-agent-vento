@@ -3,7 +3,7 @@
 App local (FastAPI + React + MongoDB) pensada para ejecutarse en un PC de la clínica y usarse por la red local (LAN).
 
 ## Acceso
-- Código de acceso del equipo: **`Orion9944+`** (guardado con hash bcrypt; se puede cambiar en **Ajustes**).
+- Código de acceso del equipo: se define en el primer arranque (guardado con hash bcrypt; se puede cambiar en **Ajustes**). No lo escribas en este repositorio.
 - Después del código: pantalla **"¿Quién eres?"** para elegir perfil (sin contraseña). La sesión se guarda en el navegador.
 
 ## Funciones (Fase 1)
@@ -29,6 +29,12 @@ App local (FastAPI + React + MongoDB) pensada para ejecutarse en un PC de la cl�
 ## Variables de backend (`backend/.env`)
 `BACKUP_DIR` (copias automáticas), `MONGO_URL, DB_NAME, LLM_BACKEND, GEMINI_API_KEY, GEMINI_MODEL, GEMINI_FALLBACK_MODELS, OLLAMA_BASE_URL, OLLAMA_CHAT_MODEL, OLLAMA_VISION_MODEL, EMBED_MODEL, EMBED_CACHE_DIR, STORAGE_DIR, INDEX_DIR, TEAM_ACCESS_CODE, JWT_SECRET, DOWNLOADS_DIR`
 Opcionales (versión Windows, las pone el lanzador): `FRONTEND_DIR` (sirve el React compilado desde FastAPI en el mismo puerto), `ORI_PORT`, `ORI_SETUP_WIZARD=1` (asistente de primer arranque), `ORI_LAUNCHER`, `HF_HUB_OFFLINE`.
+
+## Actualizar una instalación existente (sin reinstalar)
+1. Instala Node.js LTS en el PC (solo la primera vez): https://nodejs.org/es/download
+2. Descarga este repositorio (Code → Download ZIP) y descomprímelo.
+3. Doble clic en `actualizar-ori.bat`: compila el frontend, cierra Ori, guarda la versión actual en `%LOCALAPPDATA%\Ori\app-anterior` y copia `backend/*.py` y el frontend compilado en `%LOCALAPPDATA%\Ori\app`.
+4. Si algo falla: `volver-version-anterior.bat`. Los datos (`%LOCALAPPDATA%\Ori\data`) no se tocan en ningún caso.
 
 ## Versión para Windows (Fase 2)
 Instalador autónomo `OriSetup.exe` (NSIS), sin Docker ni dependencias:

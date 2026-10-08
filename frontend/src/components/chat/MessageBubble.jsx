@@ -144,12 +144,27 @@ const AssistantBody = ({ msg, idx, onOpen, onRetry, starred, onStar }) => {
   );
 };
 
+const UserCopy = ({ text, idx }) => {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    if (await copyText(text)) { setCopied(true); setTimeout(() => setCopied(false), 1500); toast.success("Mensaje copiado"); }
+    else toast.error("No se pudo copiar");
+  };
+  return (
+    <button data-testid={`user-msg-copy-${idx}`} onClick={copy} aria-label="Copiar mensaje" title="Copiar mensaje"
+      className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] text-slate-400 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 hover:bg-slate-100 hover:text-[#1B2A3A] transition-opacity">
+      {copied ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}{copied ? "Copiado" : "Copiar"}
+    </button>
+  );
+};
+
 export const MessageBubble = ({ msg, idx, isLast, onOpen, onRetry, starred, onStar }) => {
   if (msg.role === "user") {
     return (
-      <div className="flex flex-col items-end gap-1 ori-fade" data-testid={`chat-message-${idx}`} data-message-id={msg.id}>
+      <div className="group flex flex-col items-end gap-1 ori-fade" data-testid={`chat-message-${idx}`} data-message-id={msg.id}>
         {msg.template_name && <span className="flex items-center gap-1 text-[11px] text-[#0F7F75]" data-testid={`msg-template-${idx}`}><FileStack size={11} />Plantilla: {msg.template_name}</span>}
         <div className="max-w-[75%] rounded-2xl rounded-br-md bg-[#1B2A3A] px-4 py-3 text-sm text-white whitespace-pre-wrap">{msg.content}</div>
+        <UserCopy text={msg.content} idx={idx} />
       </div>
     );
   }
